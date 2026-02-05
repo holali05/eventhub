@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('ticket_types', function (Blueprint $table) {
             $table->id();
+            // Lien avec l'événement
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            
+            $table->string('name'); // Ex: "VIP", "Standard", "Étudiant"
+            $table->decimal('price', 10, 2)->default(0); // Prix du ticket
+            $table->integer('total_quantity'); // Nombre total de places mises en vente
+            $table->integer('remaining_quantity'); // Nombre de places restantes (pour les stats)
+            
             $table->timestamps();
         });
     }
