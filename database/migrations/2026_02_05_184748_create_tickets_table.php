@@ -13,6 +13,19 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
+            // Lien vers le type de ticket (VIP, Standard...)
+            $table->foreignId('ticket_type_id')->constrained()->onDelete('cascade');
+            
+            // Informations de l'acheteur (Client)
+            $table->string('customer_name');
+            $table->string('customer_whatsapp');
+            $table->string('customer_email');
+            
+            // Sécurité et QR Code
+            $table->string('unique_hash')->unique(); // Le code unique pour le QR Code
+            $table->boolean('is_scanned')->default(false); // Pour savoir si le billet a déjà été utilisé
+            $table->timestamp('scanned_at')->nullable(); // Heure du scan à l'entrée
+            
             $table->timestamps();
         });
     }
