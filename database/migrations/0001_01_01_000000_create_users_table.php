@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            
+            // AJOUT DES CHAMPS POUR EVENTHUB
+            $table->string('role')->default('organizer'); // 'admin' ou 'organizer'
+            $table->string('status')->default('pending'); // 'pending' ou 'approved'
+            
             $table->rememberToken();
             $table->timestamps();
         });
