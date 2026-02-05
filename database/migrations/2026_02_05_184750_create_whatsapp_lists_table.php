@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('whatsapp_lists', function (Blueprint $table) {
             $table->id();
+            // Lien avec l'événement
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            
+            $table->string('phone_number'); // Format international (ex: 229XXXXXXXX)
+            $table->string('contact_name')->nullable(); // Optionnel : pour personnaliser le message
+            
             $table->timestamps();
         });
     }
