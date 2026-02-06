@@ -7,26 +7,18 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-gray-100">
-        <div class="min-h-screen">
-            <nav class="bg-white border-b border-gray-100 p-4 shadow-sm">
-                <div class="max-w-7xl mx-auto flex justify-between items-center">
-                    <div class="font-bold text-indigo-600 text-xl">EventHub</div>
-                    
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="text-sm text-red-500 font-bold border border-red-500 px-3 py-1 rounded hover:bg-red-50">
-                            Déconnexion
-                        </button>
-                    </form>
-                </div>
-            </nav>
+    <body class="font-sans antialiased">
+        <div class="min-h-screen bg-gray-100">
+            @include('layouts.navigation')
 
+            <!-- Page Heading -->
             @isset($header)
                 <header class="bg-white shadow">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -35,6 +27,7 @@
                 </header>
             @endisset
 
+            <!-- Page Content -->
             <main>
                 {{ $slot }}
             </main>

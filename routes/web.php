@@ -1,38 +1,51 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Organizer\EventController;
-use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| ROUTES PUBLIQUES (Accessibles par tout le monde)
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/', [EventController::class, 'index'])->name('welcome');
-
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/organizer/dashboard', [EventController::class, 'organizerDashboard'])->name('organizer.dashboard');
-    Route::get('/organizer/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/organizer/events', [EventController::class, 'store'])->name('events.store');
-    Route::delete('/organizer/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
+Route::get('/', function () {
+    return view('welcome');
 });
 
+// Page d'un événement et achat de ticket (Pour les Dev 4 et 5)
+Route::post('/tickets/purchase', [TicketController::class, 'store'])->name('tickets.purchase');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/moderation', [EventController::class, 'adminIndex'])->name('admin.moderation');
+/*
+|--------------------------------------------------------------------------
+| ROUTES PROTEGÉES (Connexion requise + Compte Approuvé)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'approved'])->group(function () {
     
-    Route::post('/admin/approve-event/{id}', [EventController::class, 'approveEvent'])->name('admin.approve-event');
-    
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::post('/admin/approve-user/{id}', [AdminController::class, 'approveUser'])->name('admin.approve-user');
-});
+    // Dashboard principal
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
+    // --- Espace Organisateur (Pour le Dev 2) ---
+    Route::prefix('organizer')->name('organizer.')->group(function () {
+        // Routes pour la gestion des événements
+        // Route::resource('events', EventController::class);
+        
+        // Route pour scanner/vérifier un ticket
+        Route::get('/tickets/verify/{hash}', [TicketController::class, 'verify'])->name('tickets.verify');
+    });
 
-Route::middleware('auth')->group(function () {
+    // --- Espace Admin (Pour le Dev 2) ---
+    // On ajoute une vérification supplémentaire pour s'assurer que c'est un admin
+    Route::middleware(['can:admin-access'])->prefix('admin')->name('admin.')->group(function () {
+        // Gestion des utilisateurs, validation des comptes, etc.
+    });
+
+    // Profil (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
