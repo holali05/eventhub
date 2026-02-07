@@ -6,30 +6,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
-            // Lien avec l'organisateur (si l'utilisateur est supprimé, ses événements aussi)
+            // L'organisateur qui crée l'événement
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             
+            // Infos de base
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('location');
-            $table->date('event_date');
+            
+            // Date, Heure et Capacité
+            $table->date('event_date'); 
             $table->time('event_time');
-            $table->string('image_path')->nullable(); // Pour l'affiche de l'événement
+            $table->integer('capacity')->default(0); 
+            
+            // Fichiers et Admin
+            $table->string('ticket_template_path')->nullable();
+            $table->string('admin_status')->default('pending'); // pending, approved, rejected
+            $table->boolean('is_published')->default(false);
+            $table->text('rejection_reason')->nullable();
             
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('events');

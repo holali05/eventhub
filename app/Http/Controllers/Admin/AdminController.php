@@ -1,56 +1,68 @@
 <?php
 
-namespace App\Http\Controllers\Admin; 
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Event;
 use App\Models\User;
+use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
-    
-    public function index() {
+   
+
+    public function index()
+    {
         
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Accès réservé à l\'admin.');
-        }
-
-        $pendingEvents = Event::where('status', 'pending')->latest()->get();
-        $pendingUsers = User::where('is_approved', false)->where('role', '!=', 'admin')->get();
-
+        $users = User::where('id', '!=', auth()->id())->latest()->get();
+    
         
-        $events = Event::withCount('tickets')
-                    ->with(['ticketTypes'])
-                    ->get()
-                    ->map(function($event) {
-                        $totalCapacity = $event->ticketTypes->sum('capacity');
-                        $event->fill_rate = $totalCapacity > 0 ? ($event->tickets_count / $totalCapacity) * 100 : 0;
-                        return $event;
-                    });
+        $totalUsers = $users->count();
+        $pendingCount = $users->where('status', 'pending')->count();
+        $approvedCount = $users->where('status', 'approved')->count();
 
-        return view('admin.dashboard', compact('pendingEvents', 'pendingUsers', 'events'));
+        return view('admin.users.index', compact('users', 'totalUsers', 'pendingCount', 'approvedCount'));
     }
 
-    
-    public function approveUser($id) {
-        $user = User::findOrFail($id);
-        $user->update(['is_approved' => true]);
-        return back()->with('success', "Le compte de {$user->name} est validé !");
+    public function approve(User $user)
+    {
+       
+        $user->update(['status' => 'approved']);
+
+        return redirect()->route('admin.users.index')->with('success', "Le compte de {$user->name} est validé !");
     }
 
-    
-    public function approveEvent($id) {
-        $event = Event::findOrFail($id);
-        $event->update(['status' => 'approved']);
-        return back()->with('success', 'L\'événement est maintenant public !');
+    // --- GESTION DES ÉVÉNEMENTS ---
+
+    public function eventsIndex()
+    {
+        
+        $events = Event::with('user')->latest()->get();
+
+        return view('admin.events.index', compact('events'));
     }
 
-    
-    public function destroyUser($id) {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return back()->with('success', 'Utilisateur supprimé.');
+    public function approveEvent(Event $event)
+    {
+        $event->update([
+            'is_published' => true,
+            'admin_status' => 'approved' 
+        ]);
+
+        return redirect()->back()->with('success', "L'événement '{$event->title}' a été approuvé !");
+    }
+
+    public function refuseEvent(Request $request, Event $event)
+    {
+        $request->validate([
+            'reason' => 'required|string|min:5'
+        ]);
+
+        $event->update([
+            'admin_status' => 'rejected',
+            'rejection_reason' => $request->reason,
+            'is_published' => false
+        ]);
+
+        return back()->with('success', "Événement refusé.");
     }
 }

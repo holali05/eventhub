@@ -9,25 +9,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckApproved
 {
-    /**
-     * Gère la requête entrante.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. On vérifie si l'utilisateur est connecté
         if (Auth::check()) {
             $user = Auth::user();
 
-            // 2. Si c'est un admin, il passe toujours (pas besoin d'approbation)
-            if ($user->role === 'admin') {
+            // 1. L'ADMIN a un passe-droit TOTAL
+            if (strtolower($user->role) === 'admin') {
                 return $next($request);
             }
 
-            // 3. Si l'organisateur n'est pas encore approuvé
-            if ($user->status !== 'approved') {
-                // On le déconnecte et on le redirige avec un message
+            // 2. Si ce n'est pas un admin, on vérifie le statut
+            if (strtolower($user->status) !== 'approved') {
                 Auth::logout();
-                
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
                 return redirect()->route('login')->with('status', 'Votre compte est en attente d\'approbation par un administrateur.');
             }
         }

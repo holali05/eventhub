@@ -6,15 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-        $table->string('ticket_template')->nullable()->after('description');
+        $table->string('image_path')->nullable()->after('capacity');
     });
+    
     }
 
-    
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('events', function (Blueprint $table) {

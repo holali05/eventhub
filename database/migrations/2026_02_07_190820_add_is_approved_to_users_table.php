@@ -6,21 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            
-            $table->string('role')->default('student')->after('email');
-        });
+       Schema::table('users', function (Blueprint $table) {
+        // On ajoute la colonne, par défaut à 'false' (0)
+        $table->boolean('is_approved')->default(false)->after('role');
+    });
     }
 
-    
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-           
-            $table->dropColumn('role');
+            //
         });
     }
 };
