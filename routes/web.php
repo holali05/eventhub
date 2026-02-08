@@ -2,50 +2,67 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\AdminController; 
+use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| ROUTES PUBLIQUES (Accessibles par tout le monde)
+| Web Routes
 |--------------------------------------------------------------------------
 */
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    $events = Event::with('tickets') 
+                ->where('admin_status', 'approved')
+                ->latest()
+                ->get();
+    return view('welcome', compact('events'));
+})->name('home');
 
-// Page d'un événement et achat de ticket (Pour les Dev 4 et 5)
+
+Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show');
+
+
 Route::post('/tickets/purchase', [TicketController::class, 'store'])->name('tickets.purchase');
 
-/*
-|--------------------------------------------------------------------------
-| ROUTES PROTEGÉES (Connexion requise + Compte Approuvé)
-|--------------------------------------------------------------------------
-*/
 
-Route::middleware(['auth', 'approved'])->group(function () {
+
+Route::middleware(['auth'])->group(function () {
+
+   
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/users', [AdminController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}/approve', [AdminController::class, 'approve'])->name('users.approve');
+
+        Route::get('/events', [AdminController::class, 'eventsIndex'])->name('events.index');
+        Route::patch('/events/{event}/approve', [AdminController::class, 'approveEvent'])->name('events.approve');
+        Route::patch('/events/{event}/refuse', [AdminController::class, 'refuseEvent'])->name('events.refuse');
+    });
+
     
-    // Dashboard principal
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::middleware(['approved'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // --- Espace Organisateur (Pour le Dev 2) ---
-    Route::prefix('organizer')->name('organizer.')->group(function () {
-        // Routes pour la gestion des événements
-        // Route::resource('events', EventController::class);
-        
-        // Route pour scanner/vérifier un ticket
-        Route::get('/tickets/verify/{hash}', [TicketController::class, 'verify'])->name('tickets.verify');
+        Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/my-bookings', [BookingController::class, 'index'])->name('bookings.index');
+
+        Route::prefix('organizer')->name('organizer.')->group(function () {
+            Route::get('/my-events', [EventController::class, 'myEvents'])->name('events.index');
+            Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
+            Route::post('/events', [EventController::class, 'store'])->name('events.store');
+            Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
+            Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+            
+            Route::get('/tickets/verify/{hash}', [TicketController::class, 'verify'])->name('tickets.verify');
+            Route::get('/events/{event}/participants', [BookingController::class, 'participants'])->name('events.participants');
+        });
     });
 
-    // --- Espace Admin (Pour le Dev 2) ---
-    // On ajoute une vérification supplémentaire pour s'assurer que c'est un admin
-    Route::middleware(['can:admin-access'])->prefix('admin')->name('admin.')->group(function () {
-        // Gestion des utilisateurs, validation des comptes, etc.
-    });
-
-    // Profil (Breeze)
+   
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

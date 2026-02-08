@@ -5,6 +5,17 @@
 
     RewriteEngine On
 
+    # Autoriser l'accès public aux images pour corriger l'erreur 403
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        <IfModule mod_authz_core.c>
+            Require all granted
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+            Order allow,deny
+            Allow from all
+        </IfModule>
+    </FilesMatch>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
