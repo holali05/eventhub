@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\TicketType;
+use App\Models\WhatsappList; // Ajouté pour les relances
+use App\Services\WhatsappService; // Ajouté pour l'envoi
+use App\Jobs\SendWhatsappJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +18,6 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
-        
         $request->validate([
             'ticket_type_id' => 'required|exists:ticket_types,id',
             'customer_name' => 'required|string|max:255',
@@ -24,23 +26,21 @@ class TicketController extends Controller
         ]);
 
         try {
-            
-            $ticket = DB::transaction(function () use ($request) {
+            // Utilisation d'une variable pour stocker les infos nécessaires à l'envoi
+            $data = DB::transaction(function () use ($request) {
                 
-                
-                $ticketType = TicketType::where('id', $request->ticket_type_id)
+                // On récupère le type de billet avec l'événement lié
+                $ticketType = TicketType::with('event')->where('id', $request->ticket_type_id)
                     ->lockForUpdate()
                     ->first();
 
-               
                 if ($ticketType->remaining_quantity <= 0) {
                     throw new \Exception("Désolé, il n'y a plus de places disponibles pour cette catégorie.");
                 }
 
-                
                 $uniqueHash = Str::uuid() . '-' . Str::random(10);
 
-                
+                // 1. Création du ticket
                 $newTicket = Ticket::create([
                     'ticket_type_id' => $ticketType->id,
                     'customer_name' => $request->customer_name,
@@ -49,14 +49,37 @@ class TicketController extends Controller
                     'unique_hash' => $uniqueHash,
                 ]);
 
-               
+                // 2. AJOUT À LA LISTE DE RELANCE (Mission Dev 3)
+                // Cela permet au Scheduler (php artisan reminders:send) de le relancer plus tard
+                WhatsappList::updateOrCreate(
+                    [
+                        'phone_number' => $request->customer_whatsapp,
+                        'event_id' => $ticketType->event_id
+                    ],
+                    [
+                        'contact_name' => $request->customer_name,
+                        'frequency' => 'daily',
+                        'is_active' => true
+                    ]
+                );
+
                 $ticketType->decrement('remaining_quantity');
 
-                return $newTicket;
+                return [
+                    'ticket' => $newTicket,
+                    'event_title' => $ticketType->event->title ?? 'l’événement'
+                ];
             });
 
+            // 3. ENVOI DU MESSAGE WHATSAPP DE CONFIRMATION (Mission Dev 3)
+            $message = "Félicitations *{$data['ticket']->customer_name}* ! 🎉\n\n" .
+                       "Votre billet pour *{$data['event_title']}* a été réservé avec succès.\n" .
+                       "Vous recevrez prochainement votre ticket QR Code sur ce numéro.\n\n" .
+                       "Merci de votre confiance !";
+
+            SendWhatsappJob::dispatch($data['ticket']->customer_whatsapp, $message);
             
-            return back()->with('success', 'Votre ticket a été réservé avec succès !');
+            return back()->with('success', 'Votre ticket a été réservé et une confirmation WhatsApp vous a été envoyée !');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
@@ -68,23 +91,20 @@ class TicketController extends Controller
      */
     public function verify($hash)
     {
-        
         $ticket = Ticket::where('unique_hash', $hash)->first();
 
         if (!$ticket) {
             return response()->json(['status' => 'error', 'message' => 'Ticket invalide ou inexistant.'], 404);
         }
 
-       
         if ($ticket->is_scanned) {
             return response()->json([
                 'status' => 'warning',
-                'message' => 'Attention ! Ce ticket a déjà été utilisé le ' . $ticket->scanned_at->format('d/m/Y à H:i'),
+                'message' => 'Attention ! Ce ticket a déjà été utilisé.',
                 'customer' => $ticket->customer_name
             ]);
         }
 
-       
         $ticket->update([
             'is_scanned' => true,
             'scanned_at' => now(),
@@ -93,8 +113,7 @@ class TicketController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket valide. Bienvenue !',
-            'customer' => $ticket->customer_name,
-            'type' => $ticket->ticketType->name
+            'customer' => $ticket->customer_name
         ]);
     }
 }

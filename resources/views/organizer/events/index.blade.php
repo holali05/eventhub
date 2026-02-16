@@ -20,7 +20,7 @@
                 @forelse($myEvents as $event)
                     <div style="background: white; border-radius: 40px; overflow: hidden; border: 1px solid #f1f5f9; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; position: relative;">
                         
-                        {{-- Image de couverture (Corrigée pour public/uploads) --}}
+                        {{-- Image de couverture --}}
                         <div style="position: relative; height: 200px;">
                             @if($event->image_path)
                                 <img src="{{ asset($event->image_path) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ $event->title }}">
@@ -43,7 +43,7 @@
                         </div>
 
                         {{-- Infos Événement --}}
-                        <div style="padding: 30px;">
+                        <div style="padding: 30px; flex-grow: 1; display: flex; flex-direction: column;">
                             <h3 style="font-weight: 900; font-size: 1.5rem; color: #1e293b; margin-bottom: 5px;">{{ $event->title }}</h3>
                             <p style="color: #94a3b8; font-weight: 700; font-size: 10px; text-transform: uppercase; margin-bottom: 15px;">📍 {{ $event->location }}</p>
 
@@ -64,15 +64,37 @@
                                 @endforeach
                             </div>
 
-                            {{-- Statistiques --}}
-                            <div style="border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
-                                    <span style="font-weight: 900; font-size: 1.5rem; color: #1e293b;">{{ $event->total_tickets_sold ?? 0 }} <small style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Vendus</small></span>
-                                    <span style="color: #4f46e5; font-weight: 900; font-size: 12px;">{{ $event->fill_rate ?? 0 }}%</span>
-                                </div>
-                                <div style="width: 100%; background: #f1f5f9; height: 8px; border-radius: 10px; overflow: hidden;">
-                                    <div style="width: {{ $event->fill_rate ?? 0 }}%; background: linear-gradient(to right, #6366f1, #a855f7); height: 100%; border-radius: 10px;"></div>
-                                </div>
+                            {{-- BOUTON D'IMPORTATION WHATSAPP UNIQUEMENT --}}
+                            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                                <form action="{{ route('whatsapp.import') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="hidden" name="event_id" value="{{ $event->id }}">
+                                    <label style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%) !important; 
+                                                  color: #ffffff !important; 
+                                                  width: 100%; 
+                                                  padding: 14px; 
+                                                  border-radius: 18px; 
+                                                  font-weight: 900; 
+                                                  display: flex; 
+                                                  align-items: center; 
+                                                  justify-content: center; 
+                                                  gap: 10px;
+                                                  box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3); 
+                                                  text-transform: uppercase; 
+                                                  font-size: 0.75rem; 
+                                                  cursor: pointer; 
+                                                  transition: transform 0.2s;
+                                                  border: none;"
+                                           onmouseover="this.style.transform='scale(1.02)'" 
+                                           onmouseout="this.style.transform='scale(1)'">
+                                        
+                                        <svg style="height: 18px; width: 18px;" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                        </svg>
+                                        IMPORTER CONTACTS
+                                        <input type="file" name="csv_file" accept=".csv" style="display: none;" onchange="this.form.submit()">
+                                    </label>
+                                </form>
                             </div>
                         </div>
                     </div>
