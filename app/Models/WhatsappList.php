@@ -17,6 +17,17 @@ class WhatsappList extends Model
         'event_id',
         'phone_number',
         'contact_name',
+        'frequency',    // Ajouté pour la gestion auto
+        'last_sent_at', // Ajouté pour le suivi des envois
+        'is_active',    // Ajouté pour pouvoir désactiver un contact
+    ];
+
+    /**
+     * Cast des attributs.
+     */
+    protected $casts = [
+        'last_sent_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     /**
