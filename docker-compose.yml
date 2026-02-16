@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  evolution_db:
+    image: postgres:15-alpine
+    container_name: evolution_db
+    environment:
+      - POSTGRES_USER=evolution
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=evolution_api
+    networks:
+      - evolution_net
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  evolution_api:
+    image: atendai/evolution-api:v1.6.1
+    container_name: evolution_api
+    environment:
+      - AUTHENTICATION_API_KEY=123456
+      - DATABASE_ENABLED=true
+      - DATABASE_TYPE=postgres
+      - DATABASE_CONNECTION_URI=postgresql://evolution:password@evolution_db:5432/evolution_api?sslmode=disable
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
+    ports:
+      - "8081:8080"
+    networks:
+      - evolution_net
+    depends_on:
+      evolution_db:
+        condition: service_healthy
+    restart: always
+
+networks:
+  evolution_net:
+
+volumes:
+  evolution_postgres_data:

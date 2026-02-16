@@ -8,31 +8,48 @@ use Illuminate\Support\Facades\Http;
 class WhatsappService
 {
     /**
-     * Envoie un message texte simple
-     * 
-     * @param string $to Le numéro au format international (ex: 229XXXXXXXX)
-     * @param string $message Le contenu du message
+     * Récupère la configuration de l'API
      */
-    public static function sendMessage($to, $message)
+    protected static function getConfig()
     {
-        // Pour l'instant, on écrit dans les logs de Laravel (storage/logs/laravel.log)
-        // Le Développeur 3 remplacera cela par l'appel API réel (Twilio, Evolution API, etc.)
-        Log::info("WhatsApp Message envoyé à {$to} : {$message}");
-
-        return true; 
+        return [
+            'url'      => config('services.whatsapp.url'),
+            'instance' => config('services.whatsapp.instance'),
+            'token'    => config('services.whatsapp.token'),
+        ];
     }
 
-    /**
-     * Envoie un message avec un fichier attaché (Le Ticket PDF/Image)
-     * 
-     * @param string $to Le numéro
-     * @param string $message Le texte qui accompagne le fichier
-     * @param string $fileUrl L'URL du ticket généré
-     */
-    public static function sendTicket($to, $message, $fileUrl)
-    {
-        Log::info("WhatsApp Ticket envoyé à {$to}. Fichier : {$fileUrl}. Message : {$message}");
+ public static function sendMessage($to, $message)
+{
+    $config = [
+        'url' => config('services.whatsapp.url'),
+        'instance' => config('services.whatsapp.instance'),
+        'token' => config('services.whatsapp.token'),
+    ];
 
-        return true;
+    $to = preg_replace('/[^0-9]/', '', $to);
+
+    try {
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'apikey' => $config['token'],
+            'Content-Type' => 'application/json'
+        ])->post("{$config['url']}/message/sendText/{$config['instance']}", [
+            'number' => $to,
+            'text' => $message 
+        ]);
+
+       if ($response->successful()) {
+            // AJOUTE CETTE LIGNE :
+            \Illuminate\Support\Facades\Log::info("RÉPONSE API WHATSAPP : " . $response->body());
+            return true;
+        }
+
+        \Illuminate\Support\Facades\Log::error("WhatsApp API Error: " . $response->body());
+        return false;
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error("WhatsApp Service Exception: " . $e->getMessage());
+        return false;
     }
+}
+
 }
