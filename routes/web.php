@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AdminController; 
+use App\Http\Controllers\WhatsappListController;
 use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
@@ -67,5 +68,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// Route pour l'importation CSV
+Route::post('/import-whatsapp', [WhatsappListController::class, 'import'])->name('whatsapp.import');
 
 require __DIR__.'/auth.php';

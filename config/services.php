@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Configuration pour l'API WhatsApp (Evolution API)
+    'whatsapp' => [
+        'url'      => env('WHATSAPP_API_URL'),
+        'instance' => env('WHATSAPP_INSTANCE_NAME'),
+        'token'    => env('WHATSAPP_API_TOKEN'),
+    ],
+
 ];
