@@ -24,17 +24,15 @@ Route::get('/', function () {
     return view('welcome', compact('events'));
 })->name('home');
 
-
 Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show');
 
-
+// --- ROUTES DE BILLETTERIE (Mission Dev 4) ---
 Route::post('/tickets/purchase', [TicketController::class, 'store'])->name('tickets.purchase');
-
-
+// Route pour visualiser/télécharger le ticket PDF
+Route::get('/tickets/download/{hash}', [TicketController::class, 'download'])->name('tickets.download');
 
 Route::middleware(['auth'])->group(function () {
 
-   
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [AdminController::class, 'index'])->name('users.index');
         Route::patch('/users/{user}/approve', [AdminController::class, 'approve'])->name('users.approve');
@@ -43,7 +41,6 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/events/{event}/approve', [AdminController::class, 'approveEvent'])->name('events.approve');
         Route::patch('/events/{event}/refuse', [AdminController::class, 'refuseEvent'])->name('events.refuse');
     });
-
     
     Route::middleware(['approved'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -63,7 +60,6 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-   
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\WhatsappList; // Ajouté pour les relances
-use App\Services\WhatsappService; // Ajouté pour l'envoi
+use App\Models\WhatsappList; 
+use App\Services\WhatsappService; 
 use App\Jobs\SendWhatsappJob;
+use App\Mail\TicketMail; // AJOUTÉ POUR LE DEV 4
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail; // AJOUTÉ POUR LE DEV 4
+// AJOUTS POUR LE DEV 4
+use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TicketController extends Controller
 {
@@ -26,10 +31,8 @@ class TicketController extends Controller
         ]);
 
         try {
-            // Utilisation d'une variable pour stocker les infos nécessaires à l'envoi
             $data = DB::transaction(function () use ($request) {
                 
-                // On récupère le type de billet avec l'événement lié
                 $ticketType = TicketType::with('event')->where('id', $request->ticket_type_id)
                     ->lockForUpdate()
                     ->first();
@@ -40,7 +43,6 @@ class TicketController extends Controller
 
                 $uniqueHash = Str::uuid() . '-' . Str::random(10);
 
-                // 1. Création du ticket
                 $newTicket = Ticket::create([
                     'ticket_type_id' => $ticketType->id,
                     'customer_name' => $request->customer_name,
@@ -49,8 +51,6 @@ class TicketController extends Controller
                     'unique_hash' => $uniqueHash,
                 ]);
 
-                // 2. AJOUT À LA LISTE DE RELANCE (Mission Dev 3)
-                // Cela permet au Scheduler (php artisan reminders:send) de le relancer plus tard
                 WhatsappList::updateOrCreate(
                     [
                         'phone_number' => $request->customer_whatsapp,
@@ -71,19 +71,37 @@ class TicketController extends Controller
                 ];
             });
 
-            // 3. ENVOI DU MESSAGE WHATSAPP DE CONFIRMATION (Mission Dev 3)
+            // 1. ENVOI DU MESSAGE WHATSAPP (Mission Dev 3)
             $message = "Félicitations *{$data['ticket']->customer_name}* ! 🎉\n\n" .
                        "Votre billet pour *{$data['event_title']}* a été réservé avec succès.\n" .
                        "Vous recevrez prochainement votre ticket QR Code sur ce numéro.\n\n" .
                        "Merci de votre confiance !";
 
             SendWhatsappJob::dispatch($data['ticket']->customer_whatsapp, $message);
+
+            // 2. ENVOI DE L'EMAIL AVEC LE TICKET PDF (Mission Dev 4)
+            Mail::to($data['ticket']->customer_email)->send(new TicketMail($data['ticket']));
             
-            return back()->with('success', 'Votre ticket a été réservé et une confirmation WhatsApp vous a été envoyée !');
+            return back()->with('success', 'Votre ticket a été réservé ! Une confirmation WhatsApp et votre ticket par mail vous ont été envoyés.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * GÉNÉRATION DU PDF (Mission Dev 4)
+     * Cette méthode permet de visualiser ou télécharger le ticket
+     */
+    public function download($hash)
+    {
+        $ticket = Ticket::with('ticketType.event')->where('unique_hash', $hash)->firstOrFail();
+
+        $pdf = Pdf::loadView('ticket', compact('ticket'));
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Ticket-' . $ticket->customer_name . '.pdf');
     }
 
     /**

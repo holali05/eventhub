@@ -11,10 +11,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // On appelle nos seeders personnalisés
+        // On appelle nos seeders personnalisés dans le bon ordre
         $this->call([
             AdminSeeder::class,
             UserSeeder::class,
+            EventSeeder::class, // <--- AJOUTEZ CETTE LIGNE
         ]);
     }
 }
