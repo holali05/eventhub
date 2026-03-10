@@ -6,7 +6,7 @@
             </h2>
             
             <a href="{{ route('organizer.events.create') }}" 
-               style="background-color: #4f46e5 !important; color: #ffffff !important; padding: 12px 24px; border-radius: 16px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); text-transform: uppercase; font-size: 0.875rem;">
+               style="background-color: #d12121ff !important; color: #ffffff !important; padding: 12px 24px; border-radius: 16px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); text-transform: uppercase; font-size: 0.875rem;">
                 <span style="font-size: 1.25rem; margin-right: 8px;">+</span>
                 CRÉER UN ÉVÉNEMENT
             </a>

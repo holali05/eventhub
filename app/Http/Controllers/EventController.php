@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\TicketType; 
+use App\Models\TicketType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +14,7 @@ class EventController extends Controller
      */
     public function show($id)
     {
-       
+
         $event = Event::with('ticketTypes')->findOrFail($id);
         return view('events.show', compact('event'));
     }
@@ -25,9 +25,9 @@ class EventController extends Controller
     public function myEvents()
     {
         $myEvents = Event::where('user_id', auth()->id())
-                         ->with('ticketTypes') 
-                         ->latest()
-                         ->get();
+            ->with('ticketTypes')
+            ->latest()
+            ->get();
 
         return view('organizer.events.index', compact('myEvents'));
     }
@@ -45,7 +45,7 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-       
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -53,8 +53,8 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'event_time' => 'required',
             'capacity' => 'required|integer|min:1',
-            'image' => 'required|image|max:5000', 
-            'ticket_template' => 'required|image|max:5000', 
+            'image' => 'required|image|max:5000',
+            'ticket_template' => 'required|image|max:5000',
             'tickets' => 'required|array|min:1',
             'tickets.*.name' => 'required|string|max:100',
             'tickets.*.price' => 'required|numeric|min:0',
@@ -62,8 +62,8 @@ class EventController extends Controller
         ]);
 
         return DB::transaction(function () use ($request) {
-            
-            
+
+
             $imagePath = null;
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
@@ -72,7 +72,7 @@ class EventController extends Controller
                 $imagePath = 'uploads/events/covers/' . $filename;
             }
 
-            
+
             $ticketPath = null;
             if ($request->hasFile('ticket_template')) {
                 $fileTicket = $request->file('ticket_template');
@@ -81,7 +81,7 @@ class EventController extends Controller
                 $ticketPath = 'uploads/events/tickets/' . $filenameTicket;
             }
 
-            
+
             $event = Event::create([
                 'user_id' => auth()->id(),
                 'title' => $request->title,
@@ -92,15 +92,16 @@ class EventController extends Controller
                 'capacity' => $request->capacity,
                 'image_path' => $imagePath,
                 'ticket_template_path' => $ticketPath,
-                'admin_status' => 'pending', 
+                'admin_status' => 'pending',
                 'is_published' => false,
             ]);
 
-            
+
             foreach ($request->tickets as $ticketData) {
                 TicketType::create([
                     'event_id' => $event->id,
                     'name' => $ticketData['name'],
+                    'description' => $ticketData['description'] ?? null,
                     'price' => $ticketData['price'],
                     'total_quantity' => $ticketData['total_quantity'],
                     'remaining_quantity' => $ticketData['total_quantity'],
@@ -108,7 +109,7 @@ class EventController extends Controller
             }
 
             return redirect()->route('organizer.events.index')
-                             ->with('success', 'Événement créé avec succès !');
+                ->with('success', 'Événement créé avec succès !');
         });
     }
 
@@ -117,12 +118,12 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        
+
         if ($event->image_path && file_exists(public_path($event->image_path))) {
             unlink(public_path($event->image_path));
         }
 
-        
+
         if ($event->ticket_template_path && file_exists(public_path($event->ticket_template_path))) {
             unlink(public_path($event->ticket_template_path));
         }
@@ -130,6 +131,6 @@ class EventController extends Controller
         $event->delete();
 
         return redirect()->route('organizer.events.index')
-                         ->with('success', 'Événement et fichiers supprimés.');
+            ->with('success', 'Événement et fichiers supprimés.');
     }
 }

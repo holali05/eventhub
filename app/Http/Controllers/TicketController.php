@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\WhatsappList; 
-use App\Services\WhatsappService; 
+use App\Models\WhatsappList;
+use App\Services\WhatsappService;
 use App\Jobs\SendWhatsappJob;
 use App\Mail\TicketMail; // AJOUTÉ POUR LE DEV 4
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ class TicketController extends Controller
 
         try {
             $data = DB::transaction(function () use ($request) {
-                
+
                 $ticketType = TicketType::with('event')->where('id', $request->ticket_type_id)
                     ->lockForUpdate()
                     ->first();
@@ -73,15 +73,15 @@ class TicketController extends Controller
 
             // 1. ENVOI DU MESSAGE WHATSAPP (Mission Dev 3)
             $message = "Félicitations *{$data['ticket']->customer_name}* ! 🎉\n\n" .
-                       "Votre billet pour *{$data['event_title']}* a été réservé avec succès.\n" .
-                       "Vous recevrez prochainement votre ticket QR Code sur ce numéro.\n\n" .
-                       "Merci de votre confiance !";
+                "Votre billet pour *{$data['event_title']}* a été réservé avec succès.\n" .
+                "Vous recevrez prochainement votre ticket QR Code sur ce numéro.\n\n" .
+                "Merci de votre confiance !";
 
             SendWhatsappJob::dispatch($data['ticket']->customer_whatsapp, $message);
 
             // 2. ENVOI DE L'EMAIL AVEC LE TICKET PDF (Mission Dev 4)
             Mail::to($data['ticket']->customer_email)->send(new TicketMail($data['ticket']));
-            
+
             return back()->with('success', 'Votre ticket a été réservé ! Une confirmation WhatsApp et votre ticket par mail vous ont été envoyés.');
 
         } catch (\Exception $e) {
@@ -95,13 +95,26 @@ class TicketController extends Controller
      */
     public function download($hash)
     {
-        $ticket = Ticket::with('ticketType.event')->where('unique_hash', $hash)->firstOrFail();
+        // 1. Chercher dans la table Tickets (achat invité)
+        $data = \App\Models\Ticket::with('ticketType.event')->where('unique_hash', $hash)->first();
 
-        $pdf = Pdf::loadView('ticket', compact('ticket'));
+        // 2. Si non trouvé, chercher dans la table Bookings (réservation utilisateur)
+        if (!$data) {
+            $booking = \App\Models\Booking::with('ticketType.event')->where('unique_hash', $hash)->firstOrFail();
 
-        $pdf->setPaper('a4', 'portrait');
+            // Mapper les champs de Booking vers une structure compatible avec la vue ticket
+            $data = (object) [
+                'customer_name' => $booking->user_name,
+                'customer_email' => $booking->user_email,
+                'unique_hash' => $booking->unique_hash,
+                'ticketType' => $booking->ticketType,
+            ];
+        }
 
-        return $pdf->stream('Ticket-' . $ticket->customer_name . '.pdf');
+        // Utiliser $data (qui peut être un Model Ticket ou un objet mappé)
+        $pdf = Pdf::loadView('ticket', ['ticket' => $data]);
+
+        return $pdf->download('MonTicket-' . substr($hash, 0, 8) . '.pdf');
     }
 
     /**

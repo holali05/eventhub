@@ -1,3 +1,103 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─── Global Background ─── */
+body {
+    background: linear-gradient(135deg,
+        #fff5f0 0%,
+        #fdeee8 25%,
+        #fdf8f5 50%,
+        #fef3ee 75%,
+        #fff5f0 100%
+    );
+    background-size: 400% 400%;
+    animation: gradient-bg 20s ease infinite;
+    min-height: 100vh;
+}
+
+/* ─── Animated Gradient Background ─── */
+@keyframes gradient-bg {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ─── Blob animation ─── */
+@keyframes blob {
+    0%   { transform: translate(0px, 0px) scale(1); }
+    33%  { transform: translate(30px, -50px) scale(1.15); }
+    66%  { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+.animate-blob { animation: blob 12s infinite; }
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* ─── Fade-up entrance animation ─── */
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.6s ease both; }
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.30s; }
+.delay-400 { animation-delay: 0.40s; }
+.delay-500 { animation-delay: 0.50s; }
+
+/* ─── Floating animation ─── */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+/* ─── Shimmer on cards ─── */
+@keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+.shimmer-text {
+    background: linear-gradient(90deg, #ed3314 0%, #f59e0b 30%, #ed3314 60%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+}
+
+/* ─── Glassmorphism utility ─── */
+.glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ─── Gradient border card ─── */
+.card-gradient-border {
+    position: relative;
+    background: white;
+    border-radius: 2rem;
+}
+.card-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(237,51,20,0.25), rgba(245,158,11,0.15), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* ─── Pulse ring for CTA ─── */
+@keyframes ping-slow {
+    0%   { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+.animate-ping-slow { animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite; }

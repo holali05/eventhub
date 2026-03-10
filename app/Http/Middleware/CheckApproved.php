@@ -20,7 +20,7 @@ class CheckApproved
             }
 
             // 2. Si ce n'est pas un admin, on vérifie le statut
-            if (strtolower($user->status) !== 'approved') {
+            if (!$user->is_approved) {
                 Auth::logout();
 
                 $request->session()->invalidate();

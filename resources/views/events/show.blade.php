@@ -15,7 +15,7 @@
                     class="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl text-white font-bold hover:bg-white/30 transition border border-white/20">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                            d="M10 19l-7-7m0 0l-7-7m7-7H21"></path>
+                            d="M10 19l-7-7m7-7m-7 7H21"></path>
                     </svg>
                     Retour
                 </a>
@@ -27,7 +27,7 @@
 
                 <!-- Main Content (Left) -->
                 <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white rounded-4xl shadow-soft border border-white/40 p-8 md:p-12">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-4xl shadow-soft border border-white/40 p-8 md:p-12 animate-fade-up">
                         <div class="flex items-center gap-3 mb-6">
                             <span
                                 class="px-4 py-1.5 bg-coral-50 text-coral-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-coral-100 flex items-center gap-2">
@@ -64,7 +64,7 @@
                             </div>
                             <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100">
                                 <div
-                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-iris-600 shadow-sm">
+                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-coral-600 shadow-sm">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -102,7 +102,7 @@
 
                         <div class="mt-12 flex items-center gap-6 p-6 bg-coral-50 rounded-4xl border border-coral-100">
                             <div class="w-16 h-16 rounded-2xl bg-white overflow-hidden shadow-sm flex-shrink-0">
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode($event->user->name ?? 'Organizer') }}&background=5D5DFF&color=fff"
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($event->user->name ?? 'Organizer') }}&background=ed3314&color=fff"
                                     class="w-full h-full object-cover">
                             </div>
                             <div>
@@ -122,7 +122,7 @@
                 <div class="lg:col-span-1">
                     <div class="sticky top-24 space-y-6">
                         <div
-                            class="bg-white rounded-4xl shadow-soft border border-white/40 overflow-hidden ring-1 ring-black/5 hover:ring-coral-200 transition-all duration-300">
+                            class="bg-white/80 backdrop-blur-sm rounded-4xl shadow-soft border border-white/40 overflow-hidden ring-1 ring-black/5 hover:ring-coral-200 transition-all duration-300 animate-fade-up delay-100">
                             <div class="p-8">
                                 <div class="flex items-center justify-between mb-8">
                                     <h4 class="text-xl font-bold text-slate-900 font-outfit">Réserver</h4>
@@ -130,8 +130,6 @@
                                         class="bg-rose-50 text-rose-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                                         Places limitées</div>
                                 </div>
-
-                                <!-- Session alert removed, now handled by global toast -->
 
                                 <form action="{{ route('bookings.store') }}" method="POST" class="space-y-6" 
                                     x-data="{ 
@@ -150,12 +148,12 @@
                                             <x-input-label value="Vos Informations" />
                                             <div class="space-y-3">
                                                 <x-text-input name="user_name" type="text"
-                                                    class="w-full bg-slate-50 border-slate-100"
-                                                    placeholder="Nom complet" value="{{ Auth::user()->name }}"
+                                                    class="w-full bg-white border-slate-100"
+                                                    placeholder="Nom complet" value="{{ Auth::check() ? Auth::user()->name : '' }}"
                                                     required />
                                                 <x-text-input name="user_email" type="email"
-                                                    class="w-full bg-slate-50 border-slate-100"
-                                                    placeholder="Adresse Email" value="{{ Auth::user()->email }}"
+                                                    class="w-full bg-white border-slate-100"
+                                                    placeholder="Adresse Email" value="{{ Auth::check() ? Auth::user()->email : '' }}"
                                                     required />
                                             </div>
                                         </div>
@@ -219,7 +217,7 @@
                                                 <span class="text-xl font-black text-slate-900 font-outfit"
                                                     x-text="count"></span>
                                                 <button type="button" @click="if(count < 5) count++"
-                                                    class="w-10 h-10 bg-white rounded-xl shadow-sm text-slate-900 font-black hover:bg-iris-50 hover:text-iris-600 transition flex items-center justify-center">
+                                                    class="w-10 h-10 bg-white rounded-xl shadow-sm text-slate-900 font-black hover:bg-coral-50 hover:text-coral-600 transition flex items-center justify-center">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -261,7 +259,7 @@
                             </div>
 
                             <div
-                                class="bg-slate-950 p-6 flex items-center justify-between group cursor-pointer overflow-hidden relative">
+                                class="bg-slate-950 p-6 flex items-center justify-between group cursor-pointer overflow-hidden relative rounded-4xl">
                                 <div
                                         class="absolute inset-0 bg-coral-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                                 </div>
@@ -285,7 +283,7 @@
                         </div>
 
                         <!-- Safety/Policy Info -->
-                        <div class="p-6 bg-slate-100/50 rounded-4xl border border-slate-200">
+                        <div class="p-6 bg-white/80 backdrop-blur-sm rounded-4xl border border-white/40 animate-fade-up delay-200">
                             <div class="flex gap-4">
                                 <div
                                     class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-coral-600 flex-shrink-0 shadow-sm">
